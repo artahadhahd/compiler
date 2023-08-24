@@ -34,7 +34,10 @@ auto lexer(std::string_view s) -> std::vector<Token> {
     case ')':
     case '{':
     case '}':
+    case '[':
+    case ']':
     case '"':
+    case '?':
       if (buf.length() != 0) {
         output.push_back(Token{buf, line_number, charpos});
         buf = "";
@@ -60,6 +63,8 @@ auto lexer(std::string_view s) -> std::vector<Token> {
     case '<':
       /* comparison */
     case ':':
+    case '$':
+      /* misc */
       if (buf.length() != 0 and !parsing_operator) {
         output.push_back(Token{buf, line_number, charpos});
         buf = "";
