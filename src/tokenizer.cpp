@@ -1,4 +1,30 @@
 #include "tokenizer.hpp"
+
+// To change the keywords and operators you can modify this part of the code.
+// You can remove the unnecessary ones, not all of them have to be in this map.
+static std::unordered_map<std::string_view, Tokens> keywords{
+    {"let", Tokens::Let},       {"if", Tokens::If},
+    {"then", Tokens::Then},     {"else", Tokens::Else},
+    {"elseif", Tokens::Elif},   {"for", Tokens::For},
+    {"while", Tokens::While},   {"fun", Tokens::Function},
+    {">", Tokens::Gt},          {"<", Tokens::Lt},
+    {"==", Tokens::Eq},         {"!=", Tokens::Neq},
+    {"<=", Tokens::Le},         {">=", Tokens::Ge},
+    {"(", Tokens::LParen},      {")", Tokens::RParen},
+    {"*", Tokens::Mul},         {"%", Tokens::Mod},
+    {"/", Tokens::Div},         {"+", Tokens::Add},
+    {"-", Tokens::Sub},         {"=", Tokens::Assign},
+    {"+=", Tokens::InAdd},      {"-=", Tokens::InSub},
+    {"*=", Tokens::InMul},      {"/=", Tokens::InDiv},
+    {"%=", Tokens::InMod},      {"bool", Tokens::Bool},
+    {"char", Tokens::Char},     {"int", Tokens::Int},
+    {"single", Tokens::Float},  {"double", Tokens::Double},
+    {"string", Tokens::String}, {"not", Tokens::LogicNot},
+    {"and", Tokens::LogicAnd},  {"or", Tokens::LogicOr},
+    {"[", Tokens::LBracket},    {"]", Tokens::RBracket},
+    {"{", Tokens::LBrace},      {"}", Tokens::RBrace},
+    {"λ", Tokens::Lambda},      {"lambda", Tokens::Lambda}};
+
 auto lexer(std::string_view s) -> std::vector<Token> {
   std::vector<Token> output;
   std::string buf{};
@@ -15,19 +41,18 @@ auto lexer(std::string_view s) -> std::vector<Token> {
       if (buf.length() != 0) {
         if (parsing_operator) {
           parsing_operator = false;
-          output.push_back(Token{buf, line_number, charpos});
+          output.push_back(Token{keywords[buf], buf, line_number, charpos});
           buf = "";
           break;
         }
-        output.push_back(
-            Token{buf, line_number, charpos}); // push buffer to output
+        output.push_back(Token{keywords[buf], buf, line_number, charpos});
         buf = "";
       }
       charpos++;
       break;
     case '\n':
       line_number++;
-      output.push_back(Token{buf, line_number, charpos});
+      output.push_back(Token{keywords[buf], buf, line_number, charpos});
       charpos = 0;
       break;
     case '(':
@@ -39,11 +64,11 @@ auto lexer(std::string_view s) -> std::vector<Token> {
     case '"':
     case '?':
       if (buf.length() != 0) {
-        output.push_back(Token{buf, line_number, charpos});
+        output.push_back(Token{keywords[buf], buf, line_number, charpos});
         buf = "";
       }
       tmp = std::string(1, c);
-      output.push_back(Token{tmp, line_number, charpos});
+      output.push_back(Token{keywords[tmp], tmp, line_number, charpos});
       charpos++;
       break;
     case '+':
@@ -66,7 +91,7 @@ auto lexer(std::string_view s) -> std::vector<Token> {
     case '$':
       /* misc */
       if (buf.length() != 0 and !parsing_operator) {
-        output.push_back(Token{buf, line_number, charpos});
+        output.push_back(Token{keywords[buf], buf, line_number, charpos});
         buf = "";
       }
       if (!parsing_operator) {
@@ -79,7 +104,7 @@ auto lexer(std::string_view s) -> std::vector<Token> {
       charpos++;
       if (parsing_operator) {
         parsing_operator = false;
-        output.push_back(Token{buf, line_number, charpos});
+        output.push_back(Token{keywords[buf], buf, line_number, charpos});
         buf = "";
       }
       buf.push_back(c);
@@ -87,7 +112,7 @@ auto lexer(std::string_view s) -> std::vector<Token> {
     }
   }
   if (buf.length() != 0) {
-    output.push_back(Token{buf, line_number, charpos});
+    output.push_back(Token{keywords[buf], buf, line_number, charpos});
   }
   return output;
 }
