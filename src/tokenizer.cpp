@@ -24,7 +24,14 @@ static std::unordered_map<std::string_view, Tokens> keywords{
     {"[", Tokens::LBracket},    {"]", Tokens::RBracket},
     {"{", Tokens::LBrace},      {"}", Tokens::RBrace},
     {"λ", Tokens::Lambda},      {"lambda", Tokens::Lambda},
-    {"return", Tokens::Return}};
+    {"return", Tokens::Return}, {"in", Tokens::Contains}};
+
+static inline void push_to_output(std::vector<Token> &output, std::string &buf,
+                                  std::size_t line_number,
+                                  std::size_t charpos) {
+  output.push_back(Token{keywords[buf], buf, line_number, charpos});
+  buf = "";
+}
 
 auto lexer(std::string_view s) -> std::vector<Token> {
   std::vector<Token> output;
@@ -42,12 +49,10 @@ auto lexer(std::string_view s) -> std::vector<Token> {
       if (buf.length() != 0) {
         if (parsing_operator) {
           parsing_operator = false;
-          output.push_back(Token{keywords[buf], buf, line_number, charpos});
-          buf = "";
+          push_to_output(output, buf, line_number, charpos);
           break;
         }
-        output.push_back(Token{keywords[buf], buf, line_number, charpos});
-        buf = "";
+        push_to_output(output, buf, line_number, charpos);
       }
       charpos++;
       break;
@@ -65,8 +70,7 @@ auto lexer(std::string_view s) -> std::vector<Token> {
     case '"':
     case '?':
       if (buf.length() != 0) {
-        output.push_back(Token{keywords[buf], buf, line_number, charpos});
-        buf = "";
+        push_to_output(output, buf, line_number, charpos);
       }
       tmp = std::string(1, c);
       output.push_back(Token{keywords[tmp], tmp, line_number, charpos});
@@ -92,8 +96,7 @@ auto lexer(std::string_view s) -> std::vector<Token> {
     case '$':
       /* misc */
       if (buf.length() != 0 and !parsing_operator) {
-        output.push_back(Token{keywords[buf], buf, line_number, charpos});
-        buf = "";
+        push_to_output(output, buf, line_number, charpos);
       }
       if (!parsing_operator) {
         parsing_operator = true;
@@ -105,8 +108,7 @@ auto lexer(std::string_view s) -> std::vector<Token> {
       charpos++;
       if (parsing_operator) {
         parsing_operator = false;
-        output.push_back(Token{keywords[buf], buf, line_number, charpos});
-        buf = "";
+        push_to_output(output, buf, line_number, charpos);
       }
       buf.push_back(c);
       break;

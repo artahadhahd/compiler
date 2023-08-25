@@ -44,6 +44,7 @@ enum class Tokens {
   Le,       // Less than or equal
   Ge,       // Greater than or equal
   For,
+  Contains,
   While,
   LParen,
   RParen,
@@ -63,6 +64,3 @@ struct Token {
 };
 
 auto lexer(std::string_view s) -> std::vector<Token>;
-
-// This variable has the name "keywords" but it also returns for operators and
-// data types. If nothing is found, it returns Tokens::Token implicitly
