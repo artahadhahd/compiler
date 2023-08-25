@@ -10,8 +10,16 @@
 
 enum class Tokens {
   Token,
-  NewLine,
-  Number,   // Hex, Binary, Octal, Decimal, doesn't matter.
+  BadToken,
+  EOL, // End of line, not end of life!
+  Comma,
+  Dot,
+  // 0xff is converted into 255 automatically, 0Xff or 0xFF is not valid
+  // Decimals can also contain ' character
+  Decimal,
+  Binary,
+  Octal,
+  Hex,
   InAdd,    // +=
   InSub,    // -=
   InMul,    // *=
@@ -64,3 +72,4 @@ struct Token {
 };
 
 auto lexer(std::string_view s) -> std::vector<Token>;
+bool is_number(Tokens);

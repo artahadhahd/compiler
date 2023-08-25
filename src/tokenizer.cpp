@@ -1,4 +1,10 @@
 #include "tokenizer.hpp"
+#include <cctype>
+
+bool is_number(Tokens t) {
+  return (t == Tokens::Octal || t == Tokens::Hex || t == Tokens::Binary ||
+          t == Tokens::Decimal);
+}
 
 // To change the keywords and operators you can modify this part of the code.
 // You can remove the unnecessary ones, not all of them have to be in this map.
@@ -24,12 +30,68 @@ static std::unordered_map<std::string_view, Tokens> keywords{
     {"[", Tokens::LBracket},    {"]", Tokens::RBracket},
     {"{", Tokens::LBrace},      {"}", Tokens::RBrace},
     {"λ", Tokens::Lambda},      {"lambda", Tokens::Lambda},
-    {"return", Tokens::Return}, {"in", Tokens::Contains}};
+    {"return", Tokens::Return}, {"in", Tokens::Contains},
+    {",", Tokens::Comma},       {".", Tokens::Dot},
+};
+
+Tokens analyze_buffer(std::string_view buf) {
+  auto out = keywords[buf];
+  if (out != Tokens::Token) {
+    return out;
+  }
+  if (buf.length() == 0) {
+    return Tokens::Token;
+  }
+  if (!std::isdigit(buf.at(0))) {
+    return Tokens::Token;
+  }
+  if (buf.at(0) == '0') {
+    if (buf.length() < 3) {
+      return Tokens::BadToken;
+    }
+    switch (buf.at(1)) {
+    case 'b': // binary?
+      for (unsigned int i = 2; i < buf.size(); i++) {
+        if (buf.at(i) != '0' && buf.at(i) != '1') {
+          return Tokens::BadToken;
+        }
+      }
+      return Tokens::Binary;
+    case 'o': // octal?
+      for (unsigned int i = 2; i < buf.size(); i++) {
+        if (!(buf.at(i) >= '0' && buf.at(i) <= '7')) {
+          return Tokens::BadToken;
+        }
+      }
+      return Tokens::Octal;
+    case 'x': // hex?
+      for (unsigned int i = 2; i < buf.size(); i++) {
+        if (!(std::isdigit(buf.at(i)) ||
+              (buf.at(i) >= 'a' && buf.at(i) <= 'f'))) {
+          return Tokens::BadToken;
+        }
+      }
+      return Tokens::Octal;
+    default: // none of the above
+      return Tokens::BadToken;
+    }
+  } else { // decimal
+    for (auto const c : buf) {
+      if (c == '\'') { // something like 1'000 is allowed
+        continue;
+      }
+      if (!(c >= '0' && c <= '9')) {
+        return Tokens::BadToken;
+      }
+    }
+  }
+  return Tokens::Decimal;
+}
 
 static inline void push_to_output(std::vector<Token> &output, std::string &buf,
                                   std::size_t line_number,
                                   std::size_t charpos) {
-  output.push_back(Token{keywords[buf], buf, line_number, charpos});
+  output.push_back(Token{analyze_buffer(buf), buf, line_number, charpos});
   buf = "";
 }
 
@@ -56,11 +118,14 @@ auto lexer(std::string_view s) -> std::vector<Token> {
       }
       charpos++;
       break;
+    case ';':
     case '\n':
       line_number++;
-      output.push_back(Token{keywords[buf], buf, line_number, charpos});
+      output.push_back(Token{Tokens::EOL, buf, line_number, charpos});
       charpos = 0;
       break;
+    case ',':
+    case '.':
     case '(':
     case ')':
     case '{':
@@ -73,7 +138,7 @@ auto lexer(std::string_view s) -> std::vector<Token> {
         push_to_output(output, buf, line_number, charpos);
       }
       tmp = std::string(1, c);
-      output.push_back(Token{keywords[tmp], tmp, line_number, charpos});
+      output.push_back(Token{analyze_buffer(buf), tmp, line_number, charpos});
       charpos++;
       break;
     case '+':
@@ -115,7 +180,7 @@ auto lexer(std::string_view s) -> std::vector<Token> {
     }
   }
   if (buf.length() != 0) {
-    output.push_back(Token{keywords[buf], buf, line_number, charpos});
+    output.push_back(Token{analyze_buffer(buf), buf, line_number, charpos});
   }
   return output;
 }
