@@ -23,7 +23,8 @@ static std::unordered_map<std::string_view, Tokens> keywords{
     {"and", Tokens::LogicAnd},  {"or", Tokens::LogicOr},
     {"[", Tokens::LBracket},    {"]", Tokens::RBracket},
     {"{", Tokens::LBrace},      {"}", Tokens::RBrace},
-    {"λ", Tokens::Lambda},      {"lambda", Tokens::Lambda}};
+    {"λ", Tokens::Lambda},      {"lambda", Tokens::Lambda},
+    {"return", Tokens::Return}};
 
 auto lexer(std::string_view s) -> std::vector<Token> {
   std::vector<Token> output;

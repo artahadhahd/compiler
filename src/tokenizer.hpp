@@ -53,6 +53,7 @@ enum class Tokens {
   RBrace,   // }
   Function, // fun
   Lambda,   // lambda, or λ
+  Return,
 };
 
 struct Token {
