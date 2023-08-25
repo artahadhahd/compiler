@@ -118,9 +118,23 @@ auto lexer(std::string_view s) -> std::vector<Token> {
       }
       charpos++;
       break;
-    case ';':
     case '\n':
+      // ignore implicit falthrough warning. in C++20 this can be replaced with
+      // the [[fallthrough]] attribute
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#else
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wimplicit-fallthrough"
+#endif
       line_number++;
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#else
+#pragma clang diagnostic pop
+#endif
+    case ';':
       output.push_back(Token{Tokens::EOL, buf, line_number, charpos});
       charpos = 0;
       break;
