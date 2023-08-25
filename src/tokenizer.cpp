@@ -1,5 +1,4 @@
 #include "tokenizer.hpp"
-#include <cctype>
 
 bool is_number(Tokens t) {
   return (t == Tokens::Octal || t == Tokens::Hex || t == Tokens::Binary ||
@@ -34,7 +33,7 @@ static std::unordered_map<std::string_view, Tokens> keywords{
     {",", Tokens::Comma},       {".", Tokens::Dot},
 };
 
-Tokens analyze_buffer(std::string_view buf) {
+static Tokens analyze_buffer(std::string_view buf) {
   auto out = keywords[buf];
   if (out != Tokens::Token) {
     return out;
@@ -102,12 +101,29 @@ auto lexer(std::string_view s) -> std::vector<Token> {
   std::size_t line_number = 1;
   std::size_t charpos = 1;
   bool parsing_operator = false;
+  bool parsing_string = false;
   for (auto const c : s) {
     switch (c) {
+    case '"': // String literals should be treated differently.
+      if (!parsing_string) {
+        buf.push_back(c);
+        parsing_string = true;
+      } else {
+        parsing_string = false;
+        buf.push_back(c);
+        push_to_output(output, buf, line_number, charpos);
+      }
+      charpos++;
+      break;
     case ' ':
     case '\t':
     case '\r':
     case '\v':
+      if (parsing_string) {
+        charpos++;
+        buf.push_back(c);
+        break;
+      }
       if (buf.length() != 0) {
         if (parsing_operator) {
           parsing_operator = false;
@@ -146,8 +162,11 @@ auto lexer(std::string_view s) -> std::vector<Token> {
     case '}':
     case '[':
     case ']':
-    case '"':
     case '?':
+      if (parsing_string) {
+        buf.push_back(c);
+        break;
+      }
       if (buf.length() != 0) {
         push_to_output(output, buf, line_number, charpos);
       }
@@ -174,6 +193,10 @@ auto lexer(std::string_view s) -> std::vector<Token> {
     case ':':
     case '$':
       /* misc */
+      if (parsing_string) {
+        buf.push_back(c);
+        break;
+      }
       if (buf.length() != 0 and !parsing_operator) {
         push_to_output(output, buf, line_number, charpos);
       }
