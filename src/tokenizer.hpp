@@ -1,13 +1,4 @@
 #pragma once
-// #ifdef __GNUC__
-// #pragma GCC diagnostic push
-// #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
-// #pragma GCC diagnostic pop
-#ifdef __clang__ // I don't care about MSVC
-#if __has_warning("-Wimplicit-fallthrough")
-#pragma clang diagnostic ignored "-Wimplicit-fallthrough"
-#endif
-#endif
 /*
  * Author: artahadhahd
  * Under the MIT License
@@ -29,6 +20,8 @@ enum class Tokens {
   Binary,
   Octal,
   Hex,
+  StringLiteral,
+  IncompleteStringLiteral,
   InAdd,    // +=
   InSub,    // -=
   InMul,    // *=

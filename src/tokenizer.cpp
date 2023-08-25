@@ -41,6 +41,12 @@ static Tokens analyze_buffer(std::string_view buf) {
   if (buf.length() == 0) {
     return Tokens::Token;
   }
+  if (buf.at(0) == '"') {
+    if (buf.at(buf.size() - 1) != '"') {
+      return Tokens::IncompleteStringLiteral;
+    }
+    return Tokens::StringLiteral;
+  }
   if (!std::isdigit(buf.at(0))) {
     return Tokens::Token;
   }
