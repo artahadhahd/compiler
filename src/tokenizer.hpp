@@ -72,8 +72,9 @@ struct Token {
   Tokens tokentype;
   std::string token;
   std::size_t line_number, position;
+  bool scanned = false; // for the parser
 };
 
 auto lexer(std::string_view) -> std::vector<Token>;
 bool is_number(Tokens);
-bool isBadToken(Tokens);
+bool is_bad_token(Tokens);
