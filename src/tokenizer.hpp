@@ -17,11 +17,17 @@ enum class Tokens {
   // 0xff is converted into 255 automatically, 0Xff or 0xFF is not valid
   // Decimals can also contain ' character
   Decimal,
+  InValidDecimal,
   Binary,
+  InvalidBinary,
   Octal,
+  InvalidOctal,
   Hex,
+  InvalidHex,
   StringLiteral,
   IncompleteStringLiteral,
+  FloatLiteral,
+  InvalidFloatLiteral,
   InAdd,    // +=
   InSub,    // -=
   InMul,    // *=

@@ -35,6 +35,7 @@ static std::unordered_map<std::string_view, Tokens> keywords{
 
 static Tokens analyze_buffer(std::string_view buf) {
   auto out = keywords[buf];
+  unsigned char dot_count = 0;
   if (out != Tokens::Token) {
     return out;
   }
@@ -51,21 +52,31 @@ static Tokens analyze_buffer(std::string_view buf) {
     return Tokens::Token;
   }
   if (buf.at(0) == '0') {
+    if (buf.length() == 1) {
+      return Tokens::Decimal;
+    }
     if (buf.length() < 3) {
       return Tokens::BadToken;
     }
     switch (buf.at(1)) {
+    case '.': // floating point literal?
+      for (unsigned int i = 2; i < buf.size(); i++) {
+        if (!std::isdigit(buf.at(i))) {
+          return Tokens::InvalidFloatLiteral;
+        }
+      }
+      return Tokens::FloatLiteral;
     case 'b': // binary?
       for (unsigned int i = 2; i < buf.size(); i++) {
         if (buf.at(i) != '0' && buf.at(i) != '1') {
-          return Tokens::BadToken;
+          return Tokens::InvalidBinary;
         }
       }
       return Tokens::Binary;
     case 'o': // octal?
       for (unsigned int i = 2; i < buf.size(); i++) {
         if (!(buf.at(i) >= '0' && buf.at(i) <= '7')) {
-          return Tokens::BadToken;
+          return Tokens::InvalidOctal;
         }
       }
       return Tokens::Octal;
@@ -73,15 +84,19 @@ static Tokens analyze_buffer(std::string_view buf) {
       for (unsigned int i = 2; i < buf.size(); i++) {
         if (!(std::isdigit(buf.at(i)) ||
               (buf.at(i) >= 'a' && buf.at(i) <= 'f'))) {
-          return Tokens::BadToken;
+          return Tokens::InvalidHex;
         }
       }
-      return Tokens::Octal;
+      return Tokens::Hex;
     default: // none of the above
       return Tokens::BadToken;
     }
   } else { // decimal
     for (auto const c : buf) {
+      if (c == '.') {
+        dot_count++;
+        continue;
+      }
       if (c == '\'') { // something like 1'000 is allowed
         continue;
       }
@@ -90,7 +105,13 @@ static Tokens analyze_buffer(std::string_view buf) {
       }
     }
   }
-  return Tokens::Decimal;
+  if (dot_count == 0) {
+    return Tokens::Decimal;
+  }
+  if (dot_count == 1) {
+    return Tokens::FloatLiteral;
+  }
+  return Tokens::InvalidFloatLiteral;
 }
 
 static inline void push_to_output(std::vector<Token> &output, std::string &buf,
@@ -161,7 +182,6 @@ auto lexer(std::string_view s) -> std::vector<Token> {
       charpos = 0;
       break;
     case ',':
-    case '.':
     case '(':
     case ')':
     case '{':
