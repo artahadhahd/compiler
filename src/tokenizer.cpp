@@ -5,6 +5,13 @@ bool is_number(Tokens t) {
           t == Tokens::Decimal);
 }
 
+bool is_bad_token(Tokens t) {
+  return (t == Tokens::BadToken || t == Tokens::InvalidFloatLiteral ||
+          t == Tokens::InvalidHex || t == Tokens::InvalidOctal ||
+          t == Tokens::InvalidBinary || t == Tokens::InValidDecimal ||
+          t == Tokens::IncompleteStringLiteral);
+}
+
 // To change the keywords and operators you can modify this part of the code.
 // You can remove the unnecessary ones, not all of them have to be in this map.
 static std::unordered_map<std::string_view, Tokens> keywords{

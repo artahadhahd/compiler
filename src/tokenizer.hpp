@@ -1,9 +1,4 @@
 #pragma once
-/*
- * Author: artahadhahd
- * Under the MIT License
- * Website: https://artahadhahd.github.io
- */
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -79,5 +74,6 @@ struct Token {
   std::size_t line_number, position;
 };
 
-auto lexer(std::string_view s) -> std::vector<Token>;
+auto lexer(std::string_view) -> std::vector<Token>;
 bool is_number(Tokens);
+bool isBadToken(Tokens);
